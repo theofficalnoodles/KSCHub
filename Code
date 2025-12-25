@@ -684,11 +684,20 @@ CombatTab:CreateToggle({
       if Value then
          spawn(function()
             while godModeToggle do
-               game.Players.LocalPlayer.Character.Humanoid.Health = game.Players.LocalPlayer.Character.Humanoid.MaxHealth
-               game.Players.LocalPlayer.Character.Humanoid.MaxHealth = math.huge
+               local humanoid = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+               if humanoid then
+                  humanoid.MaxHealth = math.huge
+                  humanoid.Health = math.huge
+               end
                wait(0.05)
             end
          end)
+      else
+         local humanoid = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+         if humanoid then
+            humanoid.MaxHealth = 100
+            humanoid.Health = 100
+         end
       end
    end,
 })

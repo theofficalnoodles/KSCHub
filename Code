@@ -1,0 +1,1076 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "KSHub",
+   LoadingTitle = "Loading...",
+   LoadingSubtitle = "by theofficalnoodles",
+   KeySystem = false,
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "KSHub",
+      FileName = "MainConfig"
+   }
+})
+
+local MovementTab = Window:CreateTab("Movement")
+local VisualsTab = Window:CreateTab("Visuals")
+local CombatTab = Window:CreateTab("Combat")
+local MiscTab = Window:CreateTab("Misc")
+
+-- Movement Tab
+local MovementSection = MovementTab:CreateSection("Movement Features")
+
+local superSpeedValue = 100
+MovementTab:CreateSlider({
+   Name = "Super Speed Value",
+   Range = {50, 500},
+   Increment = 10,
+   Suffix = "Speed",
+   CurrentValue = 100,
+   Flag = "SliderSuperSpeedValue",
+   Callback = function(Value)
+      superSpeedValue = Value
+   end,
+})
+
+local superSpeedToggle = false
+MovementTab:CreateToggle({
+   Name = "Super Speed",
+   CurrentValue = false,
+   Flag = "ToggleSuperSpeed",
+   Callback = function(Value)
+      superSpeedToggle = Value
+      if Value then
+         game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = superSpeedValue
+      else
+         game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+      end
+   end,
+})
+
+local jumpPowerValue = 200
+MovementTab:CreateSlider({
+   Name = "Mega Jump Value",
+   Range = {100, 500},
+   Increment = 10,
+   Suffix = "Power",
+   CurrentValue = 200,
+   Flag = "SliderMegaJumpValue",
+   Callback = function(Value)
+      jumpPowerValue = Value
+   end,
+})
+
+local megaJumpToggle = false
+MovementTab:CreateToggle({
+   Name = "Mega Jump",
+   CurrentValue = false,
+   Flag = "ToggleMegaJump",
+   Callback = function(Value)
+      megaJumpToggle = Value
+      if Value then
+         game.Players.LocalPlayer.Character.Humanoid.JumpPower = jumpPowerValue
+         game.Players.LocalPlayer.Character.Humanoid.UseJumpPower = true
+      else
+         game.Players.LocalPlayer.Character.Humanoid.JumpPower = 50
+      end
+   end,
+})
+
+local infJumpConn
+local infJumpToggle = false
+MovementTab:CreateToggle({
+   Name = "Infinite Jump",
+   CurrentValue = false,
+   Flag = "ToggleInfJump",
+   Callback = function(Value)
+      infJumpToggle = Value
+      if Value then
+         infJumpConn = game:GetService("UserInputService").JumpRequest:Connect(function()
+            game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+         end)
+      else
+         if infJumpConn then
+            infJumpConn:Disconnect()
+            infJumpConn = nil
+         end
+      end
+   end,
+})
+
+local flySpeedValue = 50
+MovementTab:CreateSlider({
+   Name = "Fly Speed Value",
+   Range = {20, 200},
+   Increment = 5,
+   Suffix = "Speed",
+   CurrentValue = 50,
+   Flag = "SliderFlySpeedValue",
+   Callback = function(Value)
+      flySpeedValue = Value
+   end,
+})
+
+local flyToggle = false
+local bodyGyro
+local bodyVelocity
+MovementTab:CreateToggle({
+   Name = "Fly (WASD/Mouse)",
+   CurrentValue = false,
+   Flag = "ToggleFly",
+   Callback = function(Value)
+      flyToggle = Value
+      if Value then
+         bodyGyro = Instance.new("BodyGyro")
+         bodyGyro.P = 9e4
+         bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+         bodyGyro.Parent = game.Players.LocalPlayer.Character.HumanoidRootPart
+         
+         bodyVelocity = Instance.new("BodyVelocity")
+         bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+         bodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+         bodyVelocity.Parent = game.Players.LocalPlayer.Character.HumanoidRootPart
+         
+         spawn(function()
+            while flyToggle do
+               game.Players.LocalPlayer.Character.Humanoid.PlatformStand = true
+               bodyGyro.CFrame = workspace.CurrentCamera.CFrame
+               local vel = Vector3.new(0, 0, 0)
+               if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.W) then vel = vel + workspace.CurrentCamera.CFrame.LookVector end
+               if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.S) then vel = vel - workspace.CurrentCamera.CFrame.LookVector end
+               if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.D) then vel = vel + workspace.CurrentCamera.CFrame.RightVector end
+               if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.A) then vel = vel - workspace.CurrentCamera.CFrame.RightVector end
+               if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.Space) then vel = vel + Vector3.new(0, 1, 0) end
+               if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.LeftControl) then vel = vel - Vector3.new(0, 1, 0) end
+               bodyVelocity.Velocity = vel * flySpeedValue
+               wait()
+            end
+            if bodyGyro then bodyGyro:Destroy() end
+            if bodyVelocity then bodyVelocity:Destroy() end
+            game.Players.LocalPlayer.Character.Humanoid.PlatformStand = false
+         end)
+      else
+         flyToggle = false
+      end
+   end,
+})
+
+local noclipToggle = false
+MovementTab:CreateToggle({
+   Name = "Noclip",
+   CurrentValue = false,
+   Flag = "ToggleNoclip",
+   Callback = function(Value)
+      noclipToggle = Value
+      if Value then
+         spawn(function()
+            while noclipToggle do
+               for _, part in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                  if part:IsA("BasePart") and part.CanCollide then
+                     part.CanCollide = false
+                  end
+               end
+               game:GetService("RunService").Stepped:Wait()
+            end
+         end)
+      end
+   end,
+})
+
+local gravityValue = 50
+MovementTab:CreateSlider({
+   Name = "Low Gravity Value",
+   Range = {10, 100},
+   Increment = 5,
+   Suffix = "Gravity",
+   CurrentValue = 50,
+   Flag = "SliderLowGravityValue",
+   Callback = function(Value)
+      gravityValue = Value
+   end,
+})
+
+local lowGravityToggle = false
+MovementTab:CreateToggle({
+   Name = "Low Gravity",
+   CurrentValue = false,
+   Flag = "ToggleLowGravity",
+   Callback = function(Value)
+      lowGravityToggle = Value
+      if Value then
+         workspace.Gravity = gravityValue
+      else
+         workspace.Gravity = 196.2
+      end
+   end,
+})
+
+local invisibleToggle = false
+MovementTab:CreateToggle({
+   Name = "Invisible",
+   CurrentValue = false,
+   Flag = "ToggleInvisible",
+   Callback = function(Value)
+      invisibleToggle = Value
+      if Value then
+         for _, part in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") or part:IsA("Decal") then
+               part.Transparency = 1
+            end
+         end
+      else
+         for _, part in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") or part:IsA("Decal") then
+               part.Transparency = 0
+            end
+         end
+      end
+   end,
+})
+
+local swimToggle = false
+MovementTab:CreateToggle({
+   Name = "Swim in Air",
+   CurrentValue = false,
+   Flag = "ToggleSwim",
+   Callback = function(Value)
+      swimToggle = Value
+      if Value then
+         game.Players.LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
+      else
+         game.Players.LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+      end
+   end,
+})
+
+local superStrengthToggle = false
+MovementTab:CreateToggle({
+   Name = "Super Strength",
+   CurrentValue = false,
+   Flag = "ToggleSuperStrength",
+   Callback = function(Value)
+      superStrengthToggle = Value
+      if Value then
+         game.Players.LocalPlayer.Character.Humanoid.HipHeight = 50
+      else
+         game.Players.LocalPlayer.Character.Humanoid.HipHeight = 0
+      end
+   end,
+})
+
+local vehicleSpeedValue = 200
+MovementTab:CreateSlider({
+   Name = "Vehicle Speed Value",
+   Range = {100, 500},
+   Increment = 10,
+   Suffix = "Speed",
+   CurrentValue = 200,
+   Flag = "SliderVehicleSpeedValue",
+   Callback = function(Value)
+      vehicleSpeedValue = Value
+   end,
+})
+
+local vehicleSpeedToggle = false
+MovementTab:CreateToggle({
+   Name = "Vehicle Speed Boost",
+   CurrentValue = false,
+   Flag = "ToggleVehicleSpeed",
+   Callback = function(Value)
+      vehicleSpeedToggle = Value
+      if Value then
+         spawn(function()
+            while vehicleSpeedToggle do
+               if game.Players.LocalPlayer.Character.Humanoid.SeatPart and game.Players.LocalPlayer.Character.Humanoid.SeatPart:IsA("VehicleSeat") then
+                  game.Players.LocalPlayer.Character.Humanoid.SeatPart.MaxSpeed = vehicleSpeedValue
+               end
+               wait(0.1)
+            end
+         end)
+      end
+   end,
+})
+
+local clickTPConn
+local clickTPToggle = false
+MovementTab:CreateToggle({
+   Name = "Click TP",
+   CurrentValue = false,
+   Flag = "ToggleClickTP",
+   Callback = function(Value)
+      clickTPToggle = Value
+      if Value then
+         local mouse = game.Players.LocalPlayer:GetMouse()
+         clickTPConn = mouse.Button1Down:Connect(function()
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(mouse.Hit.Position + Vector3.new(0,5,0))
+         end)
+      else
+         if clickTPConn then
+            clickTPConn:Disconnect()
+            clickTPConn = nil
+         end
+      end
+   end,
+})
+
+local orbitToggle = false
+MovementTab:CreateToggle({
+   Name = "Orbit Player",
+   CurrentValue = false,
+   Flag = "ToggleOrbit",
+   Callback = function(Value)
+      orbitToggle = Value
+      if Value then
+         local players = game.Players:GetPlayers()
+         local target = players[math.random(1, #players)]
+         while target == game.Players.LocalPlayer do
+            target = players[math.random(1, #players)]
+         end
+         if target.Character then
+            spawn(function()
+               local angle = 0
+               while orbitToggle do
+                  angle = angle + 0.05
+                  game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, angle, 0) * CFrame.new(0, 0, 10)
+                  wait()
+               end
+            end)
+         end
+      end
+   end,
+})
+
+-- Visuals Tab
+local VisualsSection = VisualsTab:CreateSection("Visual Features")
+
+local playerESPToggle = false
+VisualsTab:CreateToggle({
+   Name = "Player ESP",
+   CurrentValue = false,
+   Flag = "TogglePlayerESP",
+   Callback = function(Value)
+      playerESPToggle = Value
+      if Value then
+         for _, player in pairs(game.Players:GetPlayers()) do
+            if player ~= game.Players.LocalPlayer and player.Character then
+               local highlight = Instance.new("Highlight")
+               highlight.FillColor = Color3.fromRGB(255, 0, 0)
+               highlight.OutlineColor = Color3.fromRGB(255, 255, 0)
+               highlight.Parent = player.Character
+            end
+         end
+         game.Players.PlayerAdded:Connect(function(player)
+            player.CharacterAdded:Connect(function(char)
+               local highlight = Instance.new("Highlight")
+               highlight.FillColor = Color3.fromRGB(255, 0, 0)
+               highlight.OutlineColor = Color3.fromRGB(255, 255, 0)
+               highlight.Parent = char
+            end)
+         end)
+      else
+         for _, player in pairs(game.Players:GetPlayers()) do
+            if player.Character and player.Character:FindFirstChild("Highlight") then
+               player.Character.Highlight:Destroy()
+            end
+         end
+      end
+   end,
+})
+
+local tracerESPToggle = false
+local tracers = {}
+VisualsTab:CreateToggle({
+   Name = "Tracer ESP",
+   CurrentValue = false,
+   Flag = "ToggleTracerESP",
+   Callback = function(Value)
+      tracerESPToggle = Value
+      if Value then
+         for _, player in pairs(game.Players:GetPlayers()) do
+            if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+               local line = Drawing.new("Line")
+               line.Color = Color3.fromRGB(255, 0, 0)
+               line.Thickness = 2
+               line.Transparency = 1
+               tracers[player] = line
+            end
+         end
+         game.Players.PlayerAdded:Connect(function(player)
+            player.CharacterAdded:Connect(function(char)
+               local line = Drawing.new("Line")
+               line.Color = Color3.fromRGB(255, 0, 0)
+               line.Thickness = 2
+               line.Transparency = 1
+               tracers[player] = line
+            end)
+         end)
+         game:GetService("RunService").RenderStepped:Connect(function()
+            if tracerESPToggle then
+               for player, line in pairs(tracers) do
+                  if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                     local rootPos = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+                     local targetPos = player.Character.HumanoidRootPart.Position
+                     local rootScreen, rootOnScreen = workspace.CurrentCamera:WorldToViewportPoint(rootPos)
+                     local targetScreen, targetOnScreen = workspace.CurrentCamera:WorldToViewportPoint(targetPos)
+                     if rootOnScreen and targetOnScreen then
+                        line.From = Vector2.new(rootScreen.X, rootScreen.Y)
+                        line.To = Vector2.new(targetScreen.X, targetScreen.Y)
+                        line.Visible = true
+                        local dist = (rootPos - targetPos).Magnitude
+                        if dist < 50 then line.Color = Color3.fromRGB(0, 255, 0) else line.Color = Color3.fromRGB(255, 0, 0) end
+                     else
+                        line.Visible = false
+                     end
+                  else
+                     line.Visible = false
+                  end
+               end
+            end
+         end)
+      else
+         for _, line in pairs(tracers) do
+            line:Remove()
+         end
+         tracers = {}
+      end
+   end,
+})
+
+local nameESPToggle = false
+local billboards = {}
+VisualsTab:CreateToggle({
+   Name = "Name ESP",
+   CurrentValue = false,
+   Flag = "ToggleNameESP",
+   Callback = function(Value)
+      nameESPToggle = Value
+      if Value then
+         for _, player in pairs(game.Players:GetPlayers()) do
+            if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
+               local billboard = Instance.new("BillboardGui")
+               billboard.Adornee = player.Character.Head
+               billboard.Size = UDim2.new(0, 200, 0, 50)
+               billboard.StudsOffset = Vector3.new(0, 2, 0)
+               billboard.AlwaysOnTop = true
+               local text = Instance.new("TextLabel")
+               text.Size = UDim2.new(1, 0, 1, 0)
+               text.BackgroundTransparency = 1
+               text.TextColor3 = Color3.fromRGB(255, 0, 0)
+               text.TextScaled = true
+               text.Parent = billboard
+               billboard.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+               billboards[player] = {billboard = billboard, text = text}
+               spawn(function()
+                  while nameESPToggle and player.Character do
+                     local health = player.Character.Humanoid.Health / player.Character.Humanoid.MaxHealth * 100
+                     local dist = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+                     text.Text = player.Name .. " [HP: " .. math.floor(health) .. "%] [Dist: " .. math.floor(dist) .. "]"
+                     wait(0.5)
+                  end
+               end)
+            end
+         end
+         game.Players.PlayerAdded:Connect(function(player)
+            player.CharacterAdded:Connect(function(char)
+               local billboard = Instance.new("BillboardGui")
+               billboard.Adornee = char:WaitForChild("Head")
+               billboard.Size = UDim2.new(0, 200, 0, 50)
+               billboard.StudsOffset = Vector3.new(0, 2, 0)
+               billboard.AlwaysOnTop = true
+               local text = Instance.new("TextLabel")
+               text.Size = UDim2.new(1, 0, 1, 0)
+               text.BackgroundTransparency = 1
+               text.TextColor3 = Color3.fromRGB(255, 0, 0)
+               text.TextScaled = true
+               text.Parent = billboard
+               billboard.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+               billboards[player] = {billboard = billboard, text = text}
+               spawn(function()
+                  while nameESPToggle and char do
+                     local health = char.Humanoid.Health / char.Humanoid.MaxHealth * 100
+                     local dist = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - char.HumanoidRootPart.Position).Magnitude
+                     text.Text = player.Name .. " [HP: " .. math.floor(health) .. "%] [Dist: " .. math.floor(dist) .. "]"
+                     wait(0.5)
+                  end
+               end)
+            end)
+         end)
+      else
+         for _, data in pairs(billboards) do
+            data.billboard:Destroy()
+         end
+         billboards = {}
+      end
+   end,
+})
+
+local itemESPToggle = false
+local itemHighlights = {}
+VisualsTab:CreateToggle({
+   Name = "Item ESP",
+   CurrentValue = false,
+   Flag = "ToggleItemESP",
+   Callback = function(Value)
+      itemESPToggle = Value
+      if Value then
+         for _, item in pairs(workspace:GetChildren()) do
+            if item:IsA("Tool") or item:IsA("Model") then
+               local highlight = Instance.new("Highlight")
+               highlight.FillColor = Color3.fromRGB(0, 255, 0)
+               highlight.Parent = item
+               table.insert(itemHighlights, highlight)
+            end
+         end
+         workspace.ChildAdded:Connect(function(item)
+            if itemESPToggle and (item:IsA("Tool") or item:IsA("Model")) then
+               local highlight = Instance.new("Highlight")
+               highlight.FillColor = Color3.fromRGB(0, 255, 0)
+               highlight.Parent = item
+               table.insert(itemHighlights, highlight)
+            end
+         end)
+      else
+         for _, hl in pairs(itemHighlights) do
+            hl:Destroy()
+         end
+         itemHighlights = {}
+      end
+   end,
+})
+
+local xrayToggle = false
+local originalTrans = {}
+VisualsTab:CreateToggle({
+   Name = "Xray",
+   CurrentValue = false,
+   Flag = "ToggleXray",
+   Callback = function(Value)
+      xrayToggle = Value
+      if Value then
+         for _, part in pairs(workspace:GetDescendants()) do
+            if part:IsA("BasePart") and part.Parent ~= game.Players.LocalPlayer.Character and part.Transparency < 0.5 then
+               originalTrans[part] = part.Transparency
+               part.Transparency = 0.7
+            end
+         end
+      else
+         for part, trans in pairs(originalTrans) do
+            if part then
+               part.Transparency = trans
+            end
+         end
+         originalTrans = {}
+      end
+   end,
+})
+
+local fullbrightToggle = false
+VisualsTab:CreateToggle({
+   Name = "Fullbright",
+   CurrentValue = false,
+   Flag = "ToggleFullbright",
+   Callback = function(Value)
+      fullbrightToggle = Value
+      if Value then
+         game.Lighting.Brightness = 3
+         game.Lighting.GlobalShadows = false
+         game.Lighting.FogEnd = 9e9
+      else
+         game.Lighting.Brightness = 1
+         game.Lighting.GlobalShadows = true
+         game.Lighting.FogEnd = 100
+      end
+   end,
+})
+
+local noFogToggle = false
+VisualsTab:CreateToggle({
+   Name = "No Fog",
+   CurrentValue = false,
+   Flag = "ToggleNoFog",
+   Callback = function(Value)
+      noFogToggle = Value
+      if Value then
+         game.Lighting.FogEnd = 9e9
+      else
+         game.Lighting.FogEnd = 100
+      end
+   end,
+})
+
+local dayNightToggle = false
+VisualsTab:CreateToggle({
+   Name = "Day/Night Cycle",
+   CurrentValue = false,
+   Flag = "ToggleDayNight",
+   Callback = function(Value)
+      dayNightToggle = Value
+      if Value then
+         game.Lighting.TimeOfDay = "12:00:00"
+      else
+         game.Lighting.TimeOfDay = "00:00:00"
+      end
+   end,
+})
+
+local fovValue = 120
+VisualsTab:CreateSlider({
+   Name = "FOV Value",
+   Range = {70, 120},
+   Increment = 5,
+   Suffix = "FOV",
+   CurrentValue = 120,
+   Flag = "SliderFOVValue",
+   Callback = function(Value)
+      fovValue = Value
+   end,
+})
+
+local fovChangerToggle = false
+VisualsTab:CreateToggle({
+   Name = "FOV Changer",
+   CurrentValue = false,
+   Flag = "ToggleFOVChanger",
+   Callback = function(Value)
+      fovChangerToggle = Value
+      if Value then
+         workspace.CurrentCamera.FieldOfView = fovValue
+      else
+         workspace.CurrentCamera.FieldOfView = 70
+      end
+   end,
+})
+
+local wallhackToggle = false
+VisualsTab:CreateToggle({
+   Name = "Wallhack (PH)",
+   CurrentValue = false,
+   Flag = "ToggleWallhack",
+   Callback = function(Value)
+      wallhackToggle = Value
+      if Value then
+         print("Wallhack Enabled (Placeholder)")
+      else
+         print("Wallhack Disabled (Placeholder)")
+      end
+   end,
+})
+
+local minimapToggle = false
+VisualsTab:CreateToggle({
+   Name = "Minimap (PH)",
+   CurrentValue = false,
+   Flag = "ToggleMinimap",
+   Callback = function(Value)
+      minimapToggle = Value
+      if Value then
+         print("Minimap Enabled (Placeholder)")
+      else
+         print("Minimap Disabled (Placeholder)")
+      end
+   end,
+})
+
+-- Combat Tab
+local CombatSection = CombatTab:CreateSection("Combat Features")
+
+local godModeToggle = false
+CombatTab:CreateToggle({
+   Name = "God Mode",
+   CurrentValue = false,
+   Flag = "ToggleGodMode",
+   Callback = function(Value)
+      godModeToggle = Value
+      if Value then
+         spawn(function()
+            while godModeToggle do
+               game.Players.LocalPlayer.Character.Humanoid.Health = game.Players.LocalPlayer.Character.Humanoid.MaxHealth
+               game.Players.LocalPlayer.Character.Humanoid.MaxHealth = math.huge
+               wait(0.05)
+            end
+         end)
+      end
+   end,
+})
+
+local reachHackToggle = false
+CombatTab:CreateToggle({
+   Name = "Reach Hack (PH)",
+   CurrentValue = false,
+   Flag = "ToggleReachHack",
+   Callback = function(Value)
+      reachHackToggle = Value
+      if Value then
+         print("Reach Hack Enabled (Placeholder)")
+      else
+         print("Reach Hack Disabled (Placeholder)")
+      end
+   end,
+})
+
+local autoHealToggle = false
+CombatTab:CreateToggle({
+   Name = "Auto Heal",
+   CurrentValue = false,
+   Flag = "ToggleAutoHeal",
+   Callback = function(Value)
+      autoHealToggle = Value
+      if Value then
+         spawn(function()
+            while autoHealToggle do
+               game.Players.LocalPlayer.Character.Humanoid.Health = game.Players.LocalPlayer.Character.Humanoid.Health + 5
+               wait(0.2)
+            end
+         end)
+      end
+   end,
+})
+
+local triggerbotToggle = false
+CombatTab:CreateToggle({
+   Name = "Triggerbot (PH)",
+   CurrentValue = false,
+   Flag = "ToggleTriggerbot",
+   Callback = function(Value)
+      triggerbotToggle = Value
+      if Value then
+         print("Triggerbot Enabled (Placeholder)")
+      else
+         print("Triggerbot Disabled (Placeholder)")
+      end
+   end,
+})
+
+local silentAimToggle = false
+CombatTab:CreateToggle({
+   Name = "Silent Aim (PH)",
+   CurrentValue = false,
+   Flag = "ToggleSilentAim",
+   Callback = function(Value)
+      silentAimToggle = Value
+      if Value then
+         print("Silent Aim Enabled (Placeholder)")
+      else
+         print("Silent Aim Disabled (Placeholder)")
+      end
+   end,
+})
+
+local noRecoilToggle = false
+CombatTab:CreateToggle({
+   Name = "No Recoil (PH)",
+   CurrentValue = false,
+   Flag = "ToggleNoRecoil",
+   Callback = function(Value)
+      noRecoilToggle = Value
+      if Value then
+         print("No Recoil Enabled (Placeholder)")
+      else
+         print("No Recoil Disabled (Placeholder)")
+      end
+   end,
+})
+
+local aimbotToggle = false
+CombatTab:CreateToggle({
+   Name = "Aimbot",
+   CurrentValue = false,
+   Flag = "ToggleAimbot",
+   Callback = function(Value)
+      aimbotToggle = Value
+      if Value then
+         spawn(function()
+            while aimbotToggle do
+               local closest, minDist = nil, math.huge
+               for _, p in pairs(game.Players:GetPlayers()) do
+                  if p ~= game.Players.LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
+                     local dist = (p.Character.Head.Position - workspace.CurrentCamera.CFrame.Position).Magnitude
+                     if dist < minDist then
+                        minDist = dist
+                        closest = p
+                     end
+                  end
+               end
+               if closest then
+                  workspace.CurrentCamera.CFrame = CFrame.lookAt(workspace.CurrentCamera.CFrame.Position, closest.Character.Head.Position)
+               end
+               wait()
+            end
+         end)
+      end
+   end,
+})
+
+CombatTab:CreateButton({
+   Name = "Kill All (Admin)",
+   Callback = function()
+      for _, p in pairs(game.Players:GetPlayers()) do
+         if p ~= game.Players.LocalPlayer and p.Character then
+            p.Character:BreakJoints()
+         end
+      end
+   end,
+})
+
+CombatTab:CreateButton({
+   Name = "Explode Self",
+   Callback = function()
+      local explosion = Instance.new("Explosion")
+      explosion.Position = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+      explosion.BlastRadius = 20
+      explosion.BlastPressure = 1e6
+      explosion.Parent = workspace
+   end,
+})
+
+-- Misc Tab
+local MiscSection = MiscTab:CreateSection("Misc Features")
+
+local rainbowCharToggle = false
+MiscTab:CreateToggle({
+   Name = "Rainbow Character",
+   CurrentValue = false,
+   Flag = "ToggleRainbowChar",
+   Callback = function(Value)
+      rainbowCharToggle = Value
+      if Value then
+         spawn(function()
+            while rainbowCharToggle do
+               for hue = 0, 1, 0.005 do
+                  local color = Color3.fromHSV(hue, 1, 1)
+                  for _, part in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                     if part:IsA("BasePart") then
+                        part.Color = color
+                     end
+                  end
+                  wait(0.02)
+               end
+            end
+         end)
+      end
+   end,
+})
+
+local headlessToggle = false
+MiscTab:CreateToggle({
+   Name = "Headless",
+   CurrentValue = false,
+   Flag = "ToggleHeadless",
+   Callback = function(Value)
+      headlessToggle = Value
+      if Value then
+         game.Players.LocalPlayer.Character.Head.Transparency = 1
+         game.Players.LocalPlayer.Character.Head.face.Transparency = 1
+      else
+         game.Players.LocalPlayer.Character.Head.Transparency = 0
+         game.Players.LocalPlayer.Character.Head.face.Transparency = 0
+      end
+   end,
+})
+
+local korbloxToggle = false
+MiscTab:CreateToggle({
+   Name = "Korblox",
+   CurrentValue = false,
+   Flag = "ToggleKorblox",
+   Callback = function(Value)
+      korbloxToggle = Value
+      if Value then
+         game.Players.LocalPlayer.Character.RightLowerLeg.MeshId = "http://www.roblox.com/asset/?id=902942093"
+         game.Players.LocalPlayer.Character.RightLowerLeg.Transparency = 1
+         game.Players.LocalPlayer.Character.RightUpperLeg.MeshId = "http://www.roblox.com/asset/?id=902942096"
+         game.Players.LocalPlayer.Character.RightFoot.MeshId = "http://www.roblox.com/asset/?id=902942089"
+      else
+         print("Korblox Disabled")
+      end
+   end,
+})
+
+local antiCheatBypassToggle = false
+local antiCheatConn
+MiscTab:CreateToggle({
+   Name = "Anti Cheat Bypass (PH)",
+   CurrentValue = false,
+   Flag = "ToggleAntiCheatBypass",
+   Callback = function(Value)
+      antiCheatBypassToggle = Value
+      if Value then
+         local oldNamecall = getrawmetatable(game).__namecall
+         setrawmetatable(game, {
+            __namecall = function(self, ...)
+               local args = {...}
+               local method = table.remove(args)
+               if method == "Kick" or method == "Ban" then
+                  return
+               end
+               return oldNamecall(self, method, unpack(args))
+            end
+         })
+         antiCheatConn = spawn(function()
+            while antiCheatBypassToggle do
+               game.Players.LocalPlayer.Character.HumanoidRootPart.Position = game.Players.LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(math.random(-0.1,0.1),0,math.random(-0.1,0.1))
+               wait(0.5)
+            end
+         end)
+         print("Anti Cheat Bypass Enabled")
+      else
+         print("Anti Cheat Bypass Disabled")
+      end
+   end,
+})
+
+local antiAFKToggle = false
+MiscTab:CreateToggle({
+   Name = "Anti-AFK",
+   CurrentValue = false,
+   Flag = "ToggleAntiAFK",
+   Callback = function(Value)
+      antiAFKToggle = Value
+      if Value then
+         spawn(function()
+            while antiAFKToggle do
+               game.Players.LocalPlayer.Character.Humanoid:MoveTo(game.Players.LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(math.random(-1,1),0,math.random(-1,1)))
+               wait(30)
+            end
+         end)
+      end
+   end,
+})
+
+local autoFarmToggle = false
+MiscTab:CreateToggle({
+   Name = "Auto Farm (PH)",
+   CurrentValue = false,
+   Flag = "ToggleAutoFarm",
+   Callback = function(Value)
+      autoFarmToggle = Value
+      if Value then
+         print("Auto Farm Enabled (Placeholder)")
+      else
+         print("Auto Farm Disabled (Placeholder)")
+      end
+   end,
+})
+
+MiscTab:CreateButton({
+   Name = "TP to Spawn",
+   Callback = function()
+      game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0,5,0)
+   end,
+})
+
+MiscTab:CreateButton({
+   Name = "TP to Random Player",
+   Callback = function()
+      local players = game.Players:GetPlayers()
+      local target = players[math.random(1, #players)]
+      if target ~= game.Players.LocalPlayer and target.Character then
+         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,-2)
+      end
+   end,
+})
+
+MiscTab:CreateButton({
+   Name = "TP to Mouse",
+   Callback = function()
+      local mouse = game.Players.LocalPlayer:GetMouse()
+      game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(mouse.Hit.Position + Vector3.new(0,5,0))
+   end,
+})
+
+MiscTab:CreateButton({
+   Name = "Chat Spam",
+   Callback = function()
+      for i = 1, 20 do
+         game.Players:Chat("KSHub owns! 😎")
+         wait(0.5)
+      end
+   end,
+})
+
+MiscTab:CreateButton({
+   Name = "Server Hop",
+   Callback = function()
+      game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.LocalPlayer)
+   end,
+})
+
+MiscTab:CreateButton({
+   Name = "Load Infinite Yield",
+   Callback = function()
+      loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+   end,
+})
+
+MiscTab:CreateButton({
+   Name = "Give Btools",
+   Callback = function()
+      Instance.new("HopperBin", game.Players.LocalPlayer.Backpack).BinType = Enum.BinType.Hammer
+      Instance.new("HopperBin", game.Players.LocalPlayer.Backpack).BinType = Enum.BinType.Grab
+      Instance.new("HopperBin", game.Players.LocalPlayer.Backpack).BinType = Enum.BinType.Clone
+   end,
+})
+
+MiscTab:CreateButton({
+   Name = "Reset Character",
+   Callback = function()
+      game.Players.LocalPlayer.Character:BreakJoints()
+   end,
+})
+
+MiscTab:CreateButton({
+   Name = "Open Player TP List",
+   Callback = function()
+      local frame = Instance.new("Frame", game.Players.LocalPlayer.PlayerGui)
+      frame.Size = UDim2.new(0,300,0,400)
+      frame.Position = UDim2.new(0.5,-150,0.5,-200)
+      frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+      
+      local scrolling = Instance.new("ScrollingFrame", frame)
+      scrolling.Size = UDim2.new(1,0,1,-50)
+      scrolling.Position = UDim2.new(0,0,0,50)
+      scrolling.BackgroundTransparency = 1
+      scrolling.CanvasSize = UDim2.new(0,0,0,#game.Players:GetPlayers()*60)
+      
+      local title = Instance.new("TextLabel", frame)
+      title.Size = UDim2.new(1,0,0,50)
+      title.Text = "Teleport to Player"
+      title.TextColor3 = Color3.fromRGB(255,0,0)
+      title.Font = Enum.Font.Arcade
+      
+      local y = 0
+      for _, p in pairs(game.Players:GetPlayers()) do
+         if p ~= game.Players.LocalPlayer then
+            local btn = Instance.new("TextButton", scrolling)
+            btn.Size = UDim2.new(1,0,0,50)
+            btn.Position = UDim2.new(0,0,0,y)
+            btn.Text = p.Name
+            btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+            btn.TextColor3 = Color3.fromRGB(255,0,0)
+            btn.MouseButton1Click:Connect(function()
+               if p.Character then
+                  game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
+               end
+            end)
+            y = y + 60
+         end
+      end
+      
+      local close = Instance.new("TextButton", frame)
+      close.Size = UDim2.new(0,40,0,40)
+      close.Position = UDim2.new(1,-50,0,5)
+      close.Text = "X"
+      close.MouseButton1Click:Connect(function()
+         frame:Destroy()
+      end)
+   end,
+})
+
+MiscTab:CreateButton({
+   Name = "Give Seek Plushie",
+   Callback = function()
+      loadstring(game:HttpGet("https://raw.githubusercontent.com/theofficalnoodles/Seek-Plushie/refs/heads/main/SeekPlushie.lua"))()
+   end,
+})
+
+Rayfield:LoadConfiguration()
